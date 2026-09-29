@@ -1,0 +1,109 @@
+/* ==UserStyle==
+@name           Pi Web 自定义壁纸
+@namespace      local.pi-web.wallpaper
+@version        1.0.0
+@description    给自建 Pi Web 加壁纸，并把面板与消息气泡调成半透明（玻璃感）
+@author         -
+@preprocessor   default
+==/UserStyle== */
+
+/* 安装前先改下面这三处：
+   1. @-moz-document 的端口（默认 30141，与 pi-web 默认端口一致）
+   2. 图片地址 /wallpaper.jpg —— 见本文件末尾的说明
+   3. 透明度数值按喜好微调
+   若懒得用 @-moz-document，可整段删掉，直接在 Stylus 界面里指定「应用于 pi-web 的地址」。 */
+
+@-moz-document regexp("^https?://[^/]+:30141/") {
+
+  /* ============================================================
+     第 1 部分（必需）：铺壁纸
+     pi-web 把整页底色画在 html 和 body 上（body,html{background:var(--bg)}），
+     所以：html 铺图，body 必须变透明，否则 body 那层不透明底色会把图盖住。
+     ============================================================ */
+
+  html {
+    background-image: url("/wallpaper.jpg") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+  }
+
+  body {
+    background: transparent !important;
+  }
+
+  /* ============================================================
+     第 2 部分（可选）：让面板/气泡半透明，露出壁纸
+     pi-web 的主题用 CSS 变量定义在 <html> 上：
+       - 暗色走 class="dark"
+       - 其余走 data-theme="light|mist|rose|pine"
+     下面用 html.dark / html[data-theme=...] 提高一级特异性来覆盖原值。
+     不想要玻璃感就整段删掉，只留第 1 部分也能正常工作。
+     ============================================================ */
+
+  /* --- 暗色主题（html.dark）--- */
+  html.dark {
+    --bg-panel:     rgba(36, 36, 36, .62);
+    --bg-hover:     rgba(46, 46, 46, .74);
+    --bg-selected:  rgba(56, 56, 56, .80);
+    --assistant-bg: rgba(26, 26, 26, .58);
+    --user-bg:      rgba(41, 41, 41, .64);
+    --tool-bg:      rgba(34, 34, 34, .58);
+    --border:       rgba(130, 130, 130, .42);
+  }
+
+  /* --- 亮色主题（html[data-theme=light]）--- */
+  html[data-theme="light"] {
+    --bg-panel:     rgba(245, 245, 245, .70);
+    --bg-hover:     rgba(238, 238, 238, .80);
+    --bg-selected:  rgba(232, 232, 232, .86);
+    --assistant-bg: rgba(255, 255, 255, .64);
+    --user-bg:      rgba(239, 246, 255, .70);
+    --tool-bg:      rgba(249, 250, 251, .64);
+    --border:       rgba(0, 0, 0, .18);
+  }
+
+  /* --- mist / rose / pine：想用就照上面格式补，把原色套上 alpha 即可 ---
+     pine 的原始值：--bg-panel #212b28 / --assistant-bg #19201f / --user-bg #25382f / --tool-bg #222d29
+     mist 的原始值：--bg-panel #e9f0ee / --assistant-bg #f4f8f7 / --user-bg #e0efeb / --tool-bg #ecf3f0
+     rose 的原始值：--bg-panel #f3edef / --assistant-bg #fcf7f8 / --user-bg #f3e4eb / --tool-bg #f7eef2
+  ------------------------------------------------------------------ */
+
+  /* ============================================================
+     第 3 部分（可选）：磨砂模糊。
+     观感更好，但会增加滚动时的 GPU 开销；移动端/低配机器建议关掉。
+     ============================================================ */
+
+  /*
+  .chat-content,
+  .sidebar-container,
+  .right-panel-container {
+    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  }
+  */
+
+}
+
+/* ================================================================
+   图片放哪 —— 推荐用 pi-web 自己的 public 目录
+
+   Stylus 的样式无法引用 file:// 本地图片（http 页面加载 file:// 会被浏览器拦），
+   也不想用体积巨大的 data: URI。最省事的办法是让 pi-web 自己托管这张图：
+
+     <pi-web 安装目录>/public/wallpaper.jpg
+     npm 全局目录下即：
+     %APPDATA%\npm\node_modules\@agegr\pi-web\public\wallpaper.jpg
+
+   然后样式里就能用相对路径 url("/wallpaper.jpg")，
+   在任何设备上访问 pi-web 都会自动解析到同一个地址。
+
+   已实测：public/ 下的文件（如 /sw.js、/offline.html）在站点根路径直接可取，
+   且**不需要登录**。也就是说同局域网的人都能下到这张图 —— 别放私密照片。
+
+   注意：public/ 位于 node_modules 内，npm 重新安装/升级 pi-web 会连带清掉，
+   升级后需要重新放一次。
+
+   不想用 public 的话，也可以填任意可访问的 https 图片地址。
+   ================================================================ */
