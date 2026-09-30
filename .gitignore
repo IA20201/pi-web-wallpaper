@@ -2,6 +2,6 @@
 # 对使用者无用，留在本地备查，不进仓库。
 /verify-snippet*.js
 
-# 离线仿页面（照实测结构写的 pi-web DOM 契约）。本机跑不了无头浏览器，
-# 只能手动在浏览器里打开，暂不纳入发布内容。
-/tests/
+# 离线仿页面保留在本地；只发布无需依赖的 Node.js 回归测试。
+/tests/*
+!/tests/userscript.test.cjs

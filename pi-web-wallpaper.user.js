@@ -1,21 +1,26 @@
 // ==UserScript==
 // @name         Pi Web 壁纸
 // @namespace    https://github.com/local/pi-web-wallpaper
-// @version      1.0.1
+// @version      1.0.2
 // @description  给 Pi Web 加自定义壁纸：在「设置 → 常规」里注入一个原生外观的「壁纸」小节，支持本机图片、壁纸透明度、面板透明度、壁纸模糊、面板磨砂、填充方式与九宫格定位。图片存在 IndexedDB，设置存在 localStorage，支持导出/导入。
-// @author       local
-// @match        http://localhost:30141/*
-// @match        http://127.0.0.1:30141/*
-// @match        http://192.168.2.103:30141/*
+// @author       IA20201
+// @license      MIT
+// @homepageURL  https://github.com/IA20201/pi-web-wallpaper
+// @supportURL   https://github.com/IA20201/pi-web-wallpaper/issues
+// @updateURL    https://raw.githubusercontent.com/IA20201/pi-web-wallpaper/main/pi-web-wallpaper.user.js
+// @downloadURL  https://raw.githubusercontent.com/IA20201/pi-web-wallpaper/main/pi-web-wallpaper.user.js
+// @match        http://*:30141/*
+// @match        https://*:30141/*
 // @run-at       document-idle
 // @grant        none
 // @noframes
 // ==/UserScript==
 
 /*
- * 如果你的 Pi Web 地址不是上面这三条之一，请自己加一行 @match，并且**必须写具体的
- * 主机**（例如 http://192.168.2.55:30141/*）。注意 `192.168.*.*` 这种写法在 match
- * 规则里是**非法的**，会导致脚本完全不被注入（这个坑真踩过一次）。
+ * 默认匹配任意主机的 HTTP/HTTPS 30141 端口，换热点或 DHCP 地址无需改脚本。
+ * 某些管理器可能忽略 @match 中的端口，因此下面还会检查协议和 location.port。
+ * 真正注入样式前仍需识别 Pi Web 的 DOM；不会在其他端口访问存储或挂观察器。
+ * 自定义端口时，同时修改 @match 和下面的 PI_WEB_PORT。
  *
  * ---------------------------------------------------------------------------
  * 设计要点（对着 pi-web 0.9.3 的真实 DOM 实测出来的，别凭印象改）：
@@ -41,7 +46,12 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.1';
+  // 与 @match 的端口保持一致；在任何存储、DOM 或观察器操作之前检查。
+  var PI_WEB_PORT = '30141';
+  if ((location.protocol !== 'http:' && location.protocol !== 'https:')
+      || location.port !== PI_WEB_PORT) return;
+
+  var VERSION = '1.0.2';
   var BOOT_FLAG = '__piWallpaperBooted';
 
   /* 单实例保护：油猴重复注入 / 手动粘贴时不要跑两遍 */
